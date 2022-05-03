@@ -13,7 +13,7 @@ beforeAll(async () => {
 beforeEach(async () => {
   await db("users").truncate();
   await db("users").insert([
-    { username: "Frodo", password: "frod123" },
+    { username: "Frod", password: "frod123" },
     { username: "Merry", password: "mer123" },
   ]);
 });
