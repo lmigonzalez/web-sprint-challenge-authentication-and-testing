@@ -13,7 +13,7 @@ beforeAll(async () => {
 beforeEach(async () => {
   await db("users").truncate();
   await db("users").insert([
-    { username: "Frod", password: "frod123" },
+    { username: "Frodo", password: "frod123" },
     { username: "Merry", password: "mer123" },
   ]);
 });
@@ -27,20 +27,29 @@ test("make sure our environment is set correctly", () => {
 });
 
 describe("Endpoints test", () => {
-  test("Get /jokes", async () => {
-    
+  test("Get / Token required", async () => {
     let res = await request(server).get("/api/jokes");
-    expect(res.status).toBe(500);
-    expect(res.body.message).toMatch('invalid token')
-    // expect(res.body).toHaveLength(3);
+    expect(res.status).toBe(401);
+    expect(res.body.message).toMatch('Token required')
+  });
+  test('Get/ Token invalid', async () => {
+    const res = await request(server).get('/api/jokes').set('Authorization', 'foobar')
+    expect(res.body.message).toMatch('Token invalid')
   });
 
-  test("POST /auth/login", async () => {
+  test("POST /auth/login -- Invalid credentials", async () => {
     let res = await request(server)
       .post("/api/auth/login")
       .send({ username: "luis", password: "luis" });
     expect(res.status).toBe(401);
     expect(res.body).toMatchObject({ message: "Invalid credentials" });
+  });
+  test("POST /auth/login -- username and password required", async () => {
+    let res = await request(server)
+      .post("/api/auth/login")
+      .send({ username: "", password: "" });
+    expect(res.status).toBe(404);
+    expect(res.body).toMatchObject({ message: "username and password required" });
   });
 
   test("POST /auth/register", async () => {
