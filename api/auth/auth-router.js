@@ -10,19 +10,29 @@ const jwt = require('jsonwebtoken')
 const bcrypt = require('bcrypt')
 
 
+function buildToken(user){
+  const payload = {
+    subject: user.id,
+    username: user.username,
+  }
+  
+  const options = {
+    expiresIn: '1d',
+  }
+  return jwt.sign(payload, JWT_SECRET, options)
+}
 
 
 
 router.post('/register', requiredValues, checkUsernameFree, (req, res, next) => {
   // res.end('implement register, please!');
-
+  // console.log('post/ register')
     const { username, password } = req.body;
     const hash = bcrypt.hashSync(password, 8);
-    const user = { username, password: hash };
 
-  User.add(user)
-    .then((saved)=>{
-      res.status(201).json(saved)
+  User.add({username, password:hash})
+    .then((newUser)=>{
+      res.status(201).json(newUser)
     })
     .catch(err=>{
       next(err);
@@ -58,34 +68,26 @@ router.post('/register', requiredValues, checkUsernameFree, (req, res, next) => 
   */
 });
 
-router.post('/login',requiredValues ,checkUsernameExists, (req, res, next) => {
-  // res.end('implement login, please!');
-  // const {password} = req.body;
+router.post('/login',requiredValues ,checkUsernameExists, (req, res) => {
+  try {
+    // const { body: { password }, user } = req;
+    // const {username, password} = req.body
+    
+    if (bcrypt.compareSync(req.body.password, req.user.password)) {
+      // req.session.user = user
+      // console.log('session:', req.session.user)
 
-  if(bcrypt.compareSync(req.body.password, req.user.password)){
-    const token = buildToken(req.user)
-
-    // req.session.user = req.user
-    res.status(200).json( {message: `Welcome ${req.user.username}`,
-    token,
-  })
-
-  }else{
-    next({status: 401, message: "Invalid credentials"})
+      res.json({ message: `welcome, ${req.user.username}`, token: buildToken(req.user) });
+    
+    } else {
+      res.status(401).json({ message: 'invalid credentials' });
+    }
+  } catch (error) {
+    res.status(500).json({ message: error.message });
   }
 
 });
 
-function buildToken(user){
-  const payload = {
-    subject: user.id,
-    username: user.username,
-  }
-  const options = {
-    expiresIn: '1d',
-  }
-  return jwt.sign(payload, JWT_SECRET, options)
-}
 
 
 
